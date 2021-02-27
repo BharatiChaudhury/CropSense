@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">CropMapper</string>
+    <string name="title_activity_polygon">Map</string>
+
+    <string-array name="cropName">
+        <item>Rice</item>
+        <item>Wheat</item>
+        <item>Cotton</item>
+        <item>Jute</item>
+        <item>Sugarcane</item>
+        <item>Tea</item>
+        <item>Coffee</item>
+        <item>Groundnut</item>
+    </string-array>
+
+    <string-array name="growthStage">
+        <item>1st</item>
+        <item>2nd</item>
+        <item>3rd</item>
+        <item>4th</item>
+        <item>5th</item>
+    </string-array>
+</resources>

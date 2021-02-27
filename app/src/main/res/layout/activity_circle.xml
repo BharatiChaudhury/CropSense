@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".CircleActivity">
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center">
+            <RadioButton
+                android:id="@+id/radBtn1"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:text="Center"
+                android:checked="true"></RadioButton>
+
+            <RadioButton
+                android:id="@+id/radBtn2"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:text="Radius"/>
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/nextBtn"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="Next" />
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#ff000000">
+        </ImageView>
+
+        <com.example.myapplication.views.CustomView
+            android:id="@+id/circleView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00ffffff"></com.example.myapplication.views.CustomView>
+    </RelativeLayout>
+</LinearLayout>
