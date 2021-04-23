@@ -8,9 +8,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.SeekBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,7 +22,9 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -29,8 +34,18 @@ public class DrawCircleActivity extends AppCompatActivity {
     private Button backBtn;
     private Button nextBtn;
     private ImageView img;
+
+    private SeekBar seekBar;
+    private ProgressBar progressBar;
+
     private float radius = SelectParametersActivity.getImgRad();
-    Bitmap bmp = RotateActivity.getBmp();
+    Bitmap bmp = getCircledBitmap(RotateActivity.getBmp());
+
+    private Mat ExgF;
+    private Mat cgF;
+    private int progressStatus = 0;
+    private Handler handler;
+
     private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -51,85 +66,123 @@ public class DrawCircleActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw_circle);
 
+
         if(!OpenCVLoader.initDebug()) {
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mOpenCVCallBack);
         }else{
             mOpenCVCallBack.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-
+        handler = new Handler();
         backBtn=findViewById(R.id.backBtn);
         nextBtn=findViewById(R.id.nextBtn);
         img=findViewById(R.id.imageView);
+        seekBar=findViewById(R.id.seekBar2);
+        progressBar = findViewById(R.id.progress);
 
-
-        Mat mat = new Mat();
+        final Mat mat = new Mat();
         Utils.bitmapToMat(bmp, mat);
-        Mat greyMat = new Mat();
-        Mat finalMat = new Mat();
-        Imgproc.cvtColor(mat, greyMat, Imgproc.COLOR_BGR2Lab);
-        Imgproc.cvtColor(mat, finalMat, Imgproc.COLOR_BGR2RGB);
 
-//        Mat cg = new Mat(new Size(greyMat.rows(), greyMat.cols()), CV_64FC1);
-//        Mat Exg = new Mat(new Size(mat.rows(), mat.cols()), CV_64FC1);
-//        Mat F = new Mat(new Size(mat.rows(), mat.cols()), CV_64FC1);
-//        Mat finalMat = new Mat(new Size(mat.rows(), mat.cols()), CV_8UC3);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Mat mat = new Mat();
+                Utils.bitmapToMat(bmp, mat);
+                final Mat greyMat = new Mat();
+                final Mat finalMat = new Mat();
+                Imgproc.cvtColor(mat, greyMat, Imgproc.COLOR_BGR2Lab);
+                Imgproc.cvtColor(mat, finalMat, Imgproc.COLOR_BGR2RGB);
 
-        List<Mat> channels = new ArrayList(3);
-        Core.split(mat,channels);
+                final Mat Exg = new Mat(mat.rows(), mat.cols(), CvType.CV_8UC1, new Scalar(0));
+                final Mat cg = new Mat(mat.rows(), mat.cols(), CvType.CV_8UC1, new Scalar(0));
 
-        double rMax = Core.minMaxLoc(channels.get(0)).maxVal;
-        double gMax = Core.minMaxLoc(channels.get(1)).maxVal;
-        double bMax = Core.minMaxLoc(channels.get(2)).maxVal;
+                List<Mat> channels = new ArrayList(3);
+                Core.split(mat,channels);
 
-        for (int j=0;j<greyMat.cols();j++){
-            for (int i=0;i<greyMat.rows();i++){
-                double s = greyMat.get(i, j)[0] + greyMat.get(i, j)[1] + greyMat.get(i, j)[2];
-                double x, y, z, cg, Exg;
-                if ((int)s != 0){
-                    x = greyMat.get(i, j)[0] / s;
-                    y = greyMat.get(i, j)[1] / s;
-                    z = greyMat.get(i, j)[2] / s;
-                }
-                else{
-                    x = greyMat.get(i, j)[0];
-                    y = greyMat.get(i, j)[1];
-                    z = greyMat.get(i, j)[2];
-                }
-                if ((int)z != 0){
-                    cg = x*y/z;
-                }
-                else{
-                    cg = x*y;
+                double rMax = Core.minMaxLoc(channels.get(0)).maxVal;
+                double gMax = Core.minMaxLoc(channels.get(1)).maxVal;
+                double bMax = Core.minMaxLoc(channels.get(2)).maxVal;
+
+                for (int j=0;j<greyMat.cols();j++){
+                    for (int i=0;i<greyMat.rows();i++){
+                        progressStatus++;
+                        double s = greyMat.get(i, j)[0] + greyMat.get(i, j)[1] + greyMat.get(i, j)[2];
+                        double x, y, z;
+                        if ((int)s != 0){
+                            x = greyMat.get(i, j)[0] / s;
+                            y = greyMat.get(i, j)[1] / s;
+                            z = greyMat.get(i, j)[2] / s;
+                        }
+                        else{
+                            x = greyMat.get(i, j)[0];
+                            y = greyMat.get(i, j)[1];
+                            z = greyMat.get(i, j)[2];
+                        }
+
+                        if ((int)z != 0){
+                            cg.put(i, j, x*y/z);
+                        }
+                        else{
+                            cg.put(i, j, x*y);
+                        }
+
+                        double r = mat.get(i, j)[0]/rMax;
+                        double g = mat.get(i, j)[1]/gMax;
+                        double b = mat.get(i, j)[2]/bMax;
+                        s = r + g + b;
+                        r = r/s;
+                        g = g/s;
+                        b = b/s;
+                        Exg.put(i, j, (2*g)-r-b);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressBar.setProgress(progressStatus*100/(greyMat.cols()*greyMat.rows()));
+                            }
+                        });
+                    }
                 }
 
-                double r = mat.get(i, j)[0]/rMax;
-                double g = mat.get(i, j)[1]/gMax;
-                double b = mat.get(i, j)[2]/bMax;
-                s = r + g + b;
-                r = r/s;
-                g = g/s;
-                b = b/s;
-                Exg = (2*g)-r-b;
-                double t = 150.0;
-                if (Exg>=t){
-                    Exg = 255.0;
-                }
-                else{
-                    Exg = 0.0;
-                }
-                if (Exg - cg >= 0){
-                    finalMat.put(i, j, 255.0, 255.0, 255.0);
-                }
-                else{
-                    finalMat.put(i, j, 0.0, 0.0, 0.0);
-                }
+                getFinalMat(Exg, cg, mat, finalMat, 0.21);
+                ExgF = Exg;
+                cgF = cg;
+                Bitmap finalBmp = Bitmap.createBitmap(greyMat.cols(), greyMat.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(finalMat, finalBmp);
+                img.setImageBitmap(finalBmp);
+
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setVisibility(View.INVISIBLE);
+                    }
+                });
             }
-        }
+        }).start();
 
-        Bitmap finalBmp = Bitmap.createBitmap(greyMat.cols(), greyMat.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(finalMat, finalBmp);
-        img.setImageBitmap(finalBmp);
+        img.setImageBitmap(bmp);
+        final double[] progress = new double[1];
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                progress[0] = i/50.0;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                final Mat finalMat = new Mat();
+                Imgproc.cvtColor(mat, finalMat, Imgproc.COLOR_BGR2RGB);
+                getFinalMat(ExgF, cgF, mat, finalMat, 0.21+progress[0]);
+                Bitmap finalBmp = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(finalMat, finalBmp);
+                img.setImageBitmap(finalBmp);
+            }
+        });
 
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,6 +201,22 @@ public class DrawCircleActivity extends AppCompatActivity {
         });
     }
 
+    public void getFinalMat(Mat Exg, Mat cg, Mat mat, Mat finalMat, double t){
+        Mat ExgF = new Mat(Exg.rows(), Exg.cols(), CvType.CV_8UC1, new Scalar(0));
+        Imgproc.threshold(Exg, ExgF, t, 255.0, Imgproc.THRESH_BINARY);
+        Mat f = new Mat(Exg.rows(), Exg.cols(), CvType.CV_8UC1, new Scalar(0));
+        Core.subtract(ExgF, cg, f);
+        Core.copyTo(mat, finalMat, f);
+        Imgproc.cvtColor(finalMat, finalMat, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(finalMat, finalMat, 1, 255.0, Imgproc.THRESH_BINARY);
+    }
+
+    public double getPercentCover(Mat mat){
+        double totalPixels = mat.rows()*mat.cols();
+        double coverPixels = Core.countNonZero(mat);
+        return (coverPixels/totalPixels);
+    }
+
     public Bitmap getCircledBitmap(Bitmap bitmap) {
         Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
@@ -156,7 +225,7 @@ public class DrawCircleActivity extends AppCompatActivity {
 
         paint.setAntiAlias(true);
         canvas.drawARGB(0, 0, 0, 0);
-        canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2, radius*2, paint);
+        canvas.drawCircle((float) (bitmap.getWidth()/2.0), (float) (bitmap.getHeight()/2.0), radius*2, paint);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(bitmap, rect, rect, paint);
 
