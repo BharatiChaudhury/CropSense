@@ -9,10 +9,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.iceteck.silicompressorr.SiliCompressor;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
                         "com.example.myapplication.fileprovider",
                         pictureFile);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                if (pictureFile != null){
+                    Log.d("Compressor", "Compressed the image" + pictureFilePath);
+                    String path = SiliCompressor.with(this).compress(pictureFilePath, pictureFile);
+                }
                 startActivityForResult(cameraIntent, REQUEST_PICTURE_CAPTURE);
             }
         }

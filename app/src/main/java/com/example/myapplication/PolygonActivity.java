@@ -12,6 +12,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -51,12 +52,15 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_polygon);
+//        Log.d("DebugME", "Till here");
         btDraw = findViewById(R.id.btDraw);
         btClear = findViewById(R.id.btClear);
         btNext = findViewById(R.id.btNext);
+//        Log.d("DebugME", "Imports OK");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
         btDraw.setOnClickListener(new View.OnClickListener() {
             @Override

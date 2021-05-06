@@ -48,7 +48,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../../../opencv451/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/../../../opencv451/build" />
     </content>
-    <orderEntry type="jdk" jdkName="Android API 29 Platform" jdkType="Android SDK" />
+    <orderEntry type="jdk" jdkName="Android API 30 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
