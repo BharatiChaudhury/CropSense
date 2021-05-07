@@ -1,21 +1,21 @@
 package com.example.myapplication;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -25,28 +25,25 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.os.Build.VERSION_CODES.M;
 
 public class PolygonActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
     private LatLng userLatLng;
     private Button btDraw,btClear,btNext;
     private Polygon polygon = null;
     private static List<LatLng> latLngList = new ArrayList<>();
     private List<Marker> markerList = new ArrayList<>();
+    private Location currentLocation;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private static final int REQUEST_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,21 +52,22 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
         btDraw = findViewById(R.id.btDraw);
         btClear = findViewById(R.id.btClear);
         btNext = findViewById(R.id.btNext);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-//        assert mapFragment != null;
-        Log.d("DebugME", "Here");
-        mapFragment.getMapAsync(this);
-        Log.d("DebugME", "Here");
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        fetchLocation();
+
         btDraw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(polygon!=null) polygon.remove();
-                PolygonOptions polygonOptions = new PolygonOptions().addAll(latLngList).clickable(true);
-                polygon = mMap.addPolygon(polygonOptions);
-                polygon.setStrokeColor(Color.parseColor("#990000ff"));
-                polygon.setFillColor(Color.parseColor("#990000ff"));
+                if (latLngList.size() > 0) {
+                    PolygonOptions polygonOptions = new PolygonOptions().addAll(latLngList).clickable(true);
+                    polygon = mMap.addPolygon(polygonOptions);
+                    polygon.setStrokeColor(Color.parseColor("#990000ff"));
+                    polygon.setFillColor(Color.parseColor("#990000ff"));
+                }
+                else{
+                    Toast.makeText(getApplicationContext(),"Select a few location markers first",Toast.LENGTH_SHORT).show();
+                }
             }
         });
         btClear.setOnClickListener(new View.OnClickListener() {
@@ -90,39 +88,35 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
         });
     }
 
+    private void fetchLocation(){
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
+            return;
+        }
+        Task<Location> task = fusedLocationProviderClient.getLastLocation();
+        task.addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null){
+                    currentLocation = location;
+                    SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+                    assert supportMapFragment != null;
+                    supportMapFragment.getMapAsync(PolygonActivity.this);
+                }
+            }
+        });
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                if(location!=null) {
-                    Log.d("DebugME", "Here also also also");
-                    userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.clear();
-                    mMap.addMarker(new MarkerOptions().position(userLatLng).title("Your Location"));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(userLatLng));
-                }
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-//        askLocationPermission();
-        Log.d("DebugME", "Here also also also 4");
+        LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Your Location");
+        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        googleMap.addMarker(markerOptions);
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -132,38 +126,18 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
                 markerList.add(marker);
             }
         });
-//        Log.d("DebugME", "Here also also also 10");
     }
 
-    private void askLocationPermission() {
-        Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
-            @Override
-            public void onPermissionGranted(PermissionGrantedResponse response) {
-                if (ActivityCompat.checkSelfPermission(getBaseContext(),Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(getBaseContext(),Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-                Location lastLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                if(lastLocation!=null) {
-                    userLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                    mMap.clear();
-                    mMap.addMarker(new MarkerOptions().position(userLatLng).title("Your Location"));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(userLatLng));
-                }
-            }
 
-            @Override
-            public void onPermissionDenied(PermissionDeniedResponse response) {
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fetchLocation();
             }
-
-            @Override
-            public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                token.continuePermissionRequest();
-            }
-        }).check();
+        }
     }
+
     public static List<LatLng> getLatLngList(){
         return latLngList;
     }

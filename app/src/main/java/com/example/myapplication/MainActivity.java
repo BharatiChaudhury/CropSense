@@ -32,33 +32,20 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_PICTURE_CAPTURE = 1;
     static boolean advanced = false;
     private String pictureFilePath;
+    private Button selectImage;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        userTypeAuthenticate();
         Button captureButton = findViewById(R.id.capImg);
-        Button selectImage = findViewById(R.id.selImg);
+        selectImage = findViewById(R.id.selImg);
         Button calLens = findViewById(R.id.calLens);
         captureButton.setOnClickListener(capture);
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
             captureButton.setEnabled(false);
         }
 
-        selectImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent;
-                Log.d("DebugME", String.valueOf(MainActivity.advanced));
-                if (MainActivity.advanced){
-                    intent = new Intent(MainActivity.this,SelectImageActivity.class);
-                }
-                else{
-                    intent = new Intent(MainActivity.this, PolygonActivity.class);
-                }
-                startActivity(intent);
-            }
-        });
+        userTypeAuthenticate();
 
 
         calLens.setOnClickListener(new View.OnClickListener() {
@@ -142,6 +129,21 @@ public class MainActivity extends AppCompatActivity {
                 else{
                     MainActivity.advanced = String.valueOf(task.getResult().getValue()).equals("true");
                 }
+
+                selectImage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent;
+                        Log.d("DebugME", String.valueOf(MainActivity.advanced));
+                        if (MainActivity.advanced){
+                            intent = new Intent(MainActivity.this,SelectImageActivity.class);
+                        }
+                        else{
+                            intent = new Intent(MainActivity.this, PolygonActivity.class);
+                        }
+                        startActivity(intent);
+                    }
+                });
             }
         });
     }
