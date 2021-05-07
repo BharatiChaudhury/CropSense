@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -14,6 +15,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.FirebaseDatabase;
 import com.iceteck.silicompressorr.SiliCompressor;
 
 import java.io.File;
@@ -24,12 +30,13 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "CapturePicture";
     static final int REQUEST_PICTURE_CAPTURE = 1;
+    static boolean advanced = false;
     private String pictureFilePath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        userTypeAuthenticate();
         Button captureButton = findViewById(R.id.capImg);
         Button selectImage = findViewById(R.id.selImg);
         Button calLens = findViewById(R.id.calLens);
@@ -41,7 +48,14 @@ public class MainActivity extends AppCompatActivity {
         selectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,SelectImageActivity.class);
+                Intent intent;
+                Log.d("DebugME", String.valueOf(MainActivity.advanced));
+                if (MainActivity.advanced){
+                    intent = new Intent(MainActivity.this,SelectImageActivity.class);
+                }
+                else{
+                    intent = new Intent(MainActivity.this, PolygonActivity.class);
+                }
                 startActivity(intent);
             }
         });
@@ -57,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private View.OnClickListener capture = new View.OnClickListener() {
+    private final View.OnClickListener capture = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
@@ -67,10 +81,9 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void sendTakePictureIntent() {
-
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraIntent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+        if (cameraIntent.resolveActivity(getPackageManager()) == null) {
             startActivityForResult(cameraIntent, REQUEST_PICTURE_CAPTURE);
 
             File pictureFile = null;
@@ -114,5 +127,22 @@ public class MainActivity extends AppCompatActivity {
                 image.setImageURI(Uri.fromFile(imgFile));
             }*/
         }
+    }
+
+    public void userTypeAuthenticate(){
+        FirebaseDatabase.getInstance().getReference()
+                .child("Users").child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .child("advanced").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()){
+                    Log.e("firebase", "Error getting data", task.getException());
+                    MainActivity.advanced = false;
+                }
+                else{
+                    MainActivity.advanced = String.valueOf(task.getResult().getValue()).equals("true");
+                }
+            }
+        });
     }
 }

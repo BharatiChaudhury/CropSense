@@ -3,12 +3,20 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.FirebaseDatabase;
 
 import static com.example.myapplication.ParameterResetActivity.HEIGHT;
 import static com.example.myapplication.ParameterResetActivity.RATIO;
@@ -84,7 +92,7 @@ public class SelectParametersActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 imgRad=height*ratio*(float)Math.tan(Math.toRadians(degrees/2));
-                Intent intent = new Intent(SelectParametersActivity.this, DrawCircleActivity.class);
+                Intent intent = new Intent(getApplicationContext(), DrawCircleActivity.class);
                 startActivity(intent);
             }
         });

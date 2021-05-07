@@ -52,16 +52,16 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_polygon);
-//        Log.d("DebugME", "Till here");
         btDraw = findViewById(R.id.btDraw);
         btClear = findViewById(R.id.btClear);
         btNext = findViewById(R.id.btNext);
-//        Log.d("DebugME", "Imports OK");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        assert mapFragment != null;
+//        assert mapFragment != null;
+        Log.d("DebugME", "Here");
         mapFragment.getMapAsync(this);
+        Log.d("DebugME", "Here");
         btDraw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,6 +98,7 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
             @Override
             public void onLocationChanged(Location location) {
                 if(location!=null) {
+                    Log.d("DebugME", "Here also also also");
                     userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                     mMap.clear();
                     mMap.addMarker(new MarkerOptions().position(userLatLng).title("Your Location"));
@@ -120,7 +121,8 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
 
             }
         };
-        askLocationPermission();
+//        askLocationPermission();
+        Log.d("DebugME", "Here also also also 4");
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -130,6 +132,7 @@ public class PolygonActivity extends FragmentActivity implements OnMapReadyCallb
                 markerList.add(marker);
             }
         });
+//        Log.d("DebugME", "Here also also also 10");
     }
 
     private void askLocationPermission() {
