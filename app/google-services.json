@@ -1,42 +1,33 @@
 {
   "project_info": {
-    "project_number": "654239279772",
-    "firebase_url": "https://my-application-6b660.firebaseio.com",
-    "project_id": "my-application-6b660",
-    "storage_bucket": "my-application-6b660.appspot.com"
+    "project_number": "317353081329",
+    "project_id": "cropsense-8d7ec",
+    "storage_bucket": "cropsense-8d7ec.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:654239279772:android:b8c9bfc34ee76e82e49b59",
+        "mobilesdk_app_id": "1:317353081329:android:afbaf3612b78dd126c2c50",
         "android_client_info": {
           "package_name": "com.example.myapplication"
         }
       },
       "oauth_client": [
         {
-          "client_id": "654239279772-jnak0qpvr6i6nst3c7k4b0oevqbnldrk.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.myapplication",
-            "certificate_hash": "14c36409d1b5b9642c129b0708bfd23c763cfe60"
-          }
-        },
-        {
-          "client_id": "654239279772-j966ae6ir3880v4drfm7or8qaesdbvqe.apps.googleusercontent.com",
+          "client_id": "317353081329-qcc6mq1575pd9iid1p2npnhdhbgj7lge.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD5iiTc-kAcuzdYsOnlWLhNR5s0C4hLEtY"
+          "current_key": "AIzaSyDRAWrygOrVxOJ70tLOW0R8Za-3Z8i82vM"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "654239279772-j966ae6ir3880v4drfm7or8qaesdbvqe.apps.googleusercontent.com",
+              "client_id": "317353081329-qcc6mq1575pd9iid1p2npnhdhbgj7lge.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

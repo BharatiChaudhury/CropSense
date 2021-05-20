@@ -3,12 +3,15 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -65,7 +68,8 @@ public class DrawCircleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw_circle);
-
+        Log.d("Pixel", String.valueOf(bmp.getHeight()) + " " + String.valueOf(bmp.getWidth()));
+        Log.d("Pixel", String.valueOf(RotateActivity.getBmp().getHeight()) + " " + String.valueOf(RotateActivity.getBmp().getWidth()));
 
         if(!OpenCVLoader.initDebug()) {
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mOpenCVCallBack);
@@ -148,7 +152,7 @@ public class DrawCircleActivity extends AppCompatActivity {
                 cgF = cg;
                 Bitmap finalBmp = Bitmap.createBitmap(greyMat.cols(), greyMat.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(finalMat, finalBmp);
-                img.setImageBitmap(finalBmp);
+                updateImageView(finalBmp);
 
                 handler.post(new Runnable() {
                     @Override
@@ -159,7 +163,7 @@ public class DrawCircleActivity extends AppCompatActivity {
             }
         }).start();
 
-        img.setImageBitmap(bmp);
+        updateImageView(bmp);
         final double[] progress = new double[1];
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -180,7 +184,7 @@ public class DrawCircleActivity extends AppCompatActivity {
                 getFinalMat(ExgF, cgF, mat, finalMat, 0.21+progress[0]);
                 Bitmap finalBmp = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(finalMat, finalBmp);
-                img.setImageBitmap(finalBmp);
+                updateImageView(finalBmp);
             }
         });
 
@@ -217,18 +221,38 @@ public class DrawCircleActivity extends AppCompatActivity {
         return (coverPixels/totalPixels);
     }
 
-    public Bitmap getCircledBitmap(Bitmap bitmap) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-        final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
+    public Bitmap getCircledBitmap(Bitmap srcBitmap) {
+        int squareBitmapWidth = (int) (4*radius);
+        Bitmap dstBitmap = Bitmap.createBitmap (
+                squareBitmapWidth, // Width
+                squareBitmapWidth, // Height
+                Bitmap.Config.ARGB_8888 // Config
+        );
+        Canvas canvas = new Canvas(dstBitmap);
+        Paint paint = new Paint();
         paint.setAntiAlias(true);
-        canvas.drawARGB(0, 0, 0, 0);
-        canvas.drawCircle((float) (bitmap.getWidth()/2.0), (float) (bitmap.getHeight()/2.0), radius*2, paint);
+        Rect rect = new Rect(0, 0, squareBitmapWidth, squareBitmapWidth);
+        RectF rectF = new RectF(rect);
+        canvas.drawOval(rectF, paint);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-        canvas.drawBitmap(bitmap, rect, rect, paint);
+        // Calculate the left and top of copied bitmap
+        float left = (squareBitmapWidth-srcBitmap.getWidth())/2;
+        float top = (squareBitmapWidth-srcBitmap.getHeight())/2;
+        canvas.drawBitmap(srcBitmap, left, top, paint);
+        srcBitmap.recycle();
+        return dstBitmap;
+    }
 
-        return output;
+    private Bitmap overlay(Bitmap bmp1, Bitmap bmp2){
+        Bitmap bmOverlay = Bitmap.createBitmap(bmp1.getWidth(), bmp1.getHeight(), bmp1.getConfig());
+        Canvas canvas = new Canvas(bmOverlay);
+        canvas.drawBitmap(bmp1, new Matrix(), null);
+        canvas.drawBitmap(bmp2, ((bmp1.getWidth()/2)-(bmp2.getWidth()/2)),((bmp1.getHeight()/2) - (bmp2.getHeight()/2)), null);
+        return bmOverlay;
+    }
+
+    private void updateImageView(Bitmap finalBmp){
+        Bitmap origBit = RotateActivity.getBmp();
+        img.setImageBitmap(overlay(Bitmap.createBitmap(origBit.getWidth(), origBit.getHeight(), Bitmap.Config.ARGB_8888), finalBmp));
     }
 }
